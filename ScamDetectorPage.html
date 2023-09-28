@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- link the style.css -->
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Scam Detection</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+</head>
+<body>
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
+        <img src = "https://www.onlygfx.com/wp-content/uploads/2020/05/scam-stamp-3.png"></img>
+        <h1>Email Scam Detection</h1>
+        
+        <textarea id="emailText" rows="4" cols="50"></textarea>
+        <button onclick="predict()">Check Email</button>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        async function predict() {
+            const MAX_LEN = 20;
+            console.log("predicting");
+            const model = await tf.loadLayersModel('./tfjs_model/model.json');
+            console.log("model loaded", model);
+            const emailText = document.getElementById('emailText').value;
+            
+            // sample_sentence = "bill stoddard wrote no one likes commercial spam and no one like unsolicited political spam end of story bill URL except perhaps for the people in charge owen URL political spam on your cell phone by lisa m bowman mailto lisa bowman cnet com special to zdnet news august NUMBER NUMBER NUMBER NUMBER pm pt url URL URL in a decision that treats text messaging on mobile phones essentially the same as bumper stickers the federal election commission has declared that senders of text based political ads don t have to disclose who funded them in an advisory opinion issued thursday the fec also suggested such messages include either a phone number or web site link so people could easily learn who paid for the message however the additional information won t be required the opinion could encourage the adoption of text based political ads as campaign experts look for new technological ways to sway voters at the same time opponents of the plan fear it could lead to anonymous political spam target wireless a small new jersey based wireless media company had asked the fec for an opinion on the matter saying that requiring financial disclosures on short messaging service sms mailings would use up too much of the NUMBER character maximum political messages on bumper stickers and buttons are also exempt from the financial disclosure requirement target wireless petition was supported by the national republican senatorial committee the cellular telecommunications and internet association and some advertising trade groups fec spokesman bob biersack said the opinion was in keeping with the commission s policy not to meddle with new technology that has the potential to reach more voters we have tried very hard not to get in the way particularly before everyone understands how the technology is going to work he said opponents of the plan have worried the exemption might encourage spam or allow senders to blast people with mass amounts of negative political messages while remaining anonymous biersack said the fec can revisit the issue if those problems surface target wireless president craig krueger characterized the opinion as good for america it will allow people to receive more communication from those running for office he said we have free speech on our side"
+
+            const words = emailText.toLowerCase().split(/\s+/);
+            const sequence = words.map(word => word.charCodeAt(0) - 'a'.charCodeAt(0) + 1);
+            console.log(sequence);
+
+
+            const paddedSequence = Array.from({ length: MAX_LEN }, (_, i) => sequence[i] || 0);
+            const input = tf.tensor([paddedSequence]);
+
+            const prediction = model.predict(input);
+            const resultElement = document.getElementById('result');
+            console.log(prediction.dataSync()[0]);
+
+            if (prediction.dataSync()[0] >= 0.40) {
+                resultElement.textContent = "This email is a scam.";
+            } else {
+                resultElement.textContent = "This email is not a scam.";
+            }
+        }
+    </script>
+</body>
+</html>
